@@ -1,0 +1,455 @@
+//2_1
+import os
+import sys
+import time
+
+def main():
+    
+    pid_fils = os.fork()
+    
+    if pid_fils == -1:  # Erreur
+        print("Problème dans fork")
+        sys.exit(1)
+    
+    elif pid_fils == 0:  # Processus fils
+        print("je suis le fils")
+    
+    else:  # Processus père
+        print("je suis le père")
+        
+        # wait
+        os.wait()
+        print("fils terminé")
+
+if __name__ == "__main__":
+    main()
+
+//2_2
+import os
+import sys
+import time
+
+def main():
+    
+    fils_1 = os.fork()
+    
+    if fils_1 == -1:
+        print("Problème dans fork lors de création de fils 1")
+        sys.exit(1)
+    
+    elif fils_1 == 0:
+        print("je suis le fils 1")
+    
+    else:
+        print("je suis le père")
+        
+        os.wait()
+        print("fils 1 terminé")
+        
+        fils_2 = os.fork()
+        
+        if fils_2 == -1:
+            print("Problème dans fork lors de création de fils 2")
+            sys.exit(1)
+        
+        elif fils_2 == 0:
+            print("je suis le fils 2")
+        
+        else:
+            os.wait()
+            print("fils 2 terminé")
+
+if __name__ == "__main__":
+    main()
+
+//2_3
+import os
+import sys
+import time
+
+def main():
+    
+    for i in range(1, 6):
+        pid_fils = os.fork()
+        
+        if pid_fils == -1:
+            print(f"Problème dans fork lors de création de fils {i}")
+            sys.exit(1)
+        
+        elif pid_fils == 0:
+            print(f"je suis le fils {i}")
+            return 
+            
+    for i in range(1, 6):
+        os.wait()
+
+if __name__ == "__main__":
+    main()
+
+//2_4
+import os
+import sys
+import time
+
+numero_fils = 0
+
+def main():
+    global numero_fils
+    
+    for i in range(1, 6):
+        numero_fils += 1
+        pid_fils = os.fork()
+        
+        if pid_fils == 0:
+            print(f"je suis le fils {numero_fils}")
+            return
+    
+    for i in range(1, 6):
+        os.wait()
+
+if __name__ == "__main__":
+    main()
+
+//2_5
+import os
+import sys
+import time
+import random
+import signal
+
+def main():
+   
+    random.seed(int(time.time()))
+    debut = time.time()
+    
+    for i in range(1, 3):
+        pid_fils = os.fork()
+        
+        if pid_fils == -1: 
+            print(f"Erreur de fork pour fils {i}")
+            sys.exit(1)
+        
+        elif pid_fils == 0: 
+            temps = random.randint(1, 10)
+            print(f"je suis le fils {i}")
+            
+            time.sleep(temps)
+            
+            print(f"fils {i} terminé après {temps} secondes")
+            return 
+    
+    for i in range(1, 3):
+        os.wait() ;
+    
+    fin = time.time()
+    print(f"La durée totale d'exécution est {int(fin - debut)} secondes")
+
+if __name__ == "__main__":
+    main()
+
+//3_1
+import sys
+
+def main():
+    
+    if len(sys.argv) != 3:
+        print("argument invalide")
+        return 0
+    
+    a = int(sys.argv[1])
+    b = int(sys.argv[2])
+    
+    print(f"Leur somme: {a + b}")
+        
+
+if __name__ == "__main__":
+    main()
+
+//3_2
+import sys
+import os
+
+def main():
+    
+    if len(sys.argv) != 2:
+        print("argument invalide")
+        return 0
+    
+    pwd = os.getenv("PWD")
+    
+    os.execlp("cp", "cp", "-r", pwd, sys.argv[1], None)
+
+if __name__ == "__main__":
+    main()
+
+//3_3
+import sys
+
+def main():
+    os.execlp("vim", "vim", sys.argv[1], None)
+
+if __name__ == "__main__":
+    main()
+
+//3_4
+import os
+
+def main():
+    pwd = os.getenv("PWD")
+    
+    while True:
+        repertoire = input("Saisir un nom de répertoire (taper 'quitter' pour arrêter): ")
+        
+        if repertoire == "quitter":
+            return 0
+
+        fils = os.fork()
+
+        if fils == 0:
+            os.execlp("cp", "cp", "-r", pwd, repertoire, None)
+
+        elif fils > 0:
+            os.wait()
+    
+if __name__ == "__main__":
+    main()
+
+//3_5
+import os
+
+def main():
+    pwd = os.getenv("PWD")
+    
+    while True:
+        texte = input("Saisir un nom de fichier (taper 'quitter' pour arrêter): ")
+        
+        if repertoire == "quitter":
+            return 0
+
+        fils = os.fork()
+
+        if fils == 0:
+            os.execlp("vim", "vim", "-r", texte, None)
+
+        elif fils > 0:
+            os.wait()
+    
+if __name__ == "__main__":
+    main()
+
+//4_1
+import os
+import sys
+import struct
+import time
+
+def main():
+    descripteur_1 = os.pipe() 
+    descripteur_2 = os.pipe()
+    
+    pid = os.fork()
+    
+    if pid == 0:
+        chaine = input("Saisir un mot: ")
+        os.close(descripteur_2[0])
+        os.write(descripteur_2[1], chaine.encode())
+        
+        os.close(descripteur_1[1])
+        data = os.read(descripteur_1[0], 4)
+        resultat = struct.unpack('i', data)[0]
+        
+        print(f"resultat: {resultat}")
+        
+    else:
+        os.close(descripteur_2[1])
+        
+        chaine_recu_bytes = os.read(descripteur_2[0], 50)
+        chaine_recu = chaine_recu_bytes.decode('utf-8').rstrip('\x00')
+
+        nom_fichier = "fichier"
+        with open(nom_fichier, 'r') as f:
+            chaine_trouve = f.readline()
+
+        mots = chaine_trouve.split()
+
+        valeur = 0
+        for mot in mots:
+            if mot.startswith(chaine_recu) == 1:
+                valeur = 1
+                break
+        
+        os.close(descripteur_1[0])
+        os.write(descripteur_1[1], struct.pack('i', valeur))
+
+        os.wait()        
+        
+
+if __name__ == "__main__":
+    main()
+
+//4_2
+import os
+import sys
+import time
+
+def main():
+    pipe_1 = os.pipe()
+    pipe_2 = os.pipe() 
+    
+    pid = os.fork()
+    
+    if pid == 0:
+        saved_stdin = os.dup(0)  
+        saved_stdout = os.dup(1) 
+        
+        # Saisie utilisateur
+        chaine = input("Saisir un mot: ")
+        
+        os.close(pipe_1[0])     
+        os.dup2(pipe_1[1], 1)
+        os.close(pipe_1[1])
+        
+        # Envoyer la chaîne vers le père
+        print(chaine)
+        sys.stdout.flush()
+        os.close(1)                    # Fermer stdout pour débloquer
+        
+        os.close(pipe_2[1])         
+        os.dup2(pipe_2[0], 0)
+        os.close(pipe_2[0])
+        
+        resultat = int(input())
+        
+        os.dup2(saved_stdout, 1)
+        os.close(saved_stdout)
+        os.close(saved_stdin)
+        
+        print(f"resultat: {resultat}")
+        
+    else:
+        os.close(pipe_1[1])
+        os.dup2(pipe_1[0], 0)
+        os.close(pipe_1[0])
+        
+        # Lire la chaîne envoyée par le fils
+        chaine_recu = input()
+        
+        # Recherche du mot dans le fichier
+        nom_fichier = "fichier"
+        valeur = 0
+        
+        with open(nom_fichier, 'r') as f:
+            chaine_trouve = f.readline()
+
+        mots = chaine_trouve.split()
+
+        for mot in mots:
+            if mot.startswith(chaine_recu) == 1:
+                valeur = 1
+                break
+        
+        os.close(pipe_2[0])
+        os.dup2(pipe_2[1], 1)
+        os.close(pipe_2[1])
+        
+        # Envoyer le résultat
+        print(valeur)
+        sys.stdout.flush()
+        os.close(1) # Fermer stdout pour débloquer
+        
+        # Attendre la fin du fils
+        os.wait()
+
+if __name__ == "__main__":
+    main()
+
+//4_31
+import os
+import sys
+import time
+
+def main():
+    tube = os.pipe()
+    
+    pid = os.fork()
+    
+    if pid == 0:
+        os.close(tube[1])  # Fermer l'extrémité écriture
+        
+        nomfich_bytes = os.read(tube[0], 50)
+        nomfich = nomfich_bytes.decode().rstrip('\x00')
+        os.close(tube[0])
+        os.execvp("python3", ["python3", "exercice4_32.py", nomfich])
+        
+    else:
+        nomfich = "/tmp/test.txt"
+        
+        os.close(tube[0])  # Fermer l'extrémité lecture
+        os.write(tube[1], nomfich.encode())
+        os.close(tube[1])
+        
+        try:
+            os.mkfifo(nomfich, 0o644)
+        except FileExistsError:
+            print(f"Le FIFO {nomfich} existe déjà")
+        except OSError as e:
+            print(f"Erreur création FIFO: {e}")
+            sys.exit(1)
+        
+        fd = os.open(nomfich, os.O_WRONLY)
+        
+        message = "coucou\n"
+        os.write(fd, message.encode())
+        os.close(fd)
+        
+        os.wait()
+        
+        #os.unlink(nomfich)
+
+if __name__ == "__main__":
+    main()
+
+//4_32
+import os
+import sys
+import time
+
+def main():
+    if len(sys.argv) != 2:
+        print("Utilisation: python script.py <nom_fichier>")
+        return 1
+    
+    nom_fichier = sys.argv[1]
+    
+    with open(nom_fichier, 'r') as f:
+        chaine = f.readline().strip()
+        print(chaine)
+            
+    os.unlink(nom_fichier)
+
+if __name__ == "__main__":
+    main()
+
+//5_1
+import threading
+import time
+
+def ma_fonction_thread(tableau):
+    n = tableau[0]
+    print("affichage des contenus de tableau passé en paramètre")
+    
+    for i in range(1, n + 1):
+        print(f"{tableau[i]} ", end="")
+    print()
+
+def main():
+    tableau = [5, 2, 4, 6, 8, 10]
+    
+    my_thread = threading.Thread(target=ma_fonction_thread, args=(tableau,))
+    
+    my_thread.start()
+    
+    my_thread.join()
+
+if __name__ == "__main__":
+    main()
