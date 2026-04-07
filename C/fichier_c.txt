@@ -1,0 +1,1372 @@
+//2_1
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
+
+int main()
+{
+	pid_t pid_fils ;
+	pid_fils = fork() ;
+	if (pid_fils == -1)
+	{
+		perror("Problème dans fork\n") ;
+		exit (errno) ;
+	}
+	else if (pid_fils == 0)
+	{
+		printf("je suis le fils\n") ;
+	}
+	else
+	{
+		printf("je suis le père\n") ;
+		wait(NULL) ;
+		printf("fils terminé\n");
+	}
+	return (0) ;
+}
+
+//2_2
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
+
+int main()
+{
+	pid_t fils_1, fils_2 ;
+	fils_1 = fork() ;
+	if (fils_1 == -1)
+	{
+		perror("Problème dans fork lors de création de fils 1\n") ;
+		exit (errno) ;
+	}
+	else if (fils_1 == 0)
+	{
+		printf("je suis le fils 1\n") ;
+	}
+	else
+	{
+		printf("je suis le père\n") ;
+		wait(NULL) ;
+		printf("fils 1 terminé\n");
+		fils_2 = fork() ;
+		if (fils_2 == -1)
+		{
+			perror("Problème dans fork lors de création de fils 2\n") ;
+			exit (errno) ;
+		}
+		else if (fils_2 == 0)
+		{
+			printf("je suis le fils 2\n") ;
+		}
+		else
+		{
+			wait(NULL) ;
+			printf("fils 2 terminé\n");
+
+		}
+	}
+	return (0) ;
+}
+
+//2_3
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
+
+int main()
+{
+	pid_t pid_fils ;
+	int i = 0 ;
+	for (i = 1; i <= 5; ++i)
+	{
+		pid_fils = fork() ;
+		if (pid_fils == -1)
+		{
+			perror("Problème dans fork lors de création de fils\n") ;
+			exit (errno) ;
+		}
+		else if (pid_fils == 0)
+		{
+			printf("je suis le fils %d\n", i) ;
+			break ;
+		}
+	}
+	for (i = 1; i <= 5; ++i)
+	{
+		wait(NULL) ;
+	}
+	return (0) ;
+}
+
+//2_4
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
+
+int numero_fils = 0 ;
+
+int main()
+{
+	pid_t pid_fils ;
+	int i = 0 ;
+	for (i = 1; i <= 5; ++i)
+	{
+		numero_fils++ ;
+		pid_fils = fork() ;
+		if (pid_fils == 0)
+		{
+			printf("je suis le fils %d\n", numero_fils) ;
+			return (0) ;
+		}
+	}
+	for (i = 1; i <= 5; ++i)
+	{
+		wait(NULL) ;
+	}
+	return (0) ;
+}
+
+//2_5
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <errno.h>
+
+int main()
+{
+	srand(time(NULL)) ;
+	time_t debut, fin ;
+	debut = time(NULL) ;
+
+	pid_t fils;
+	int i = 0 ;
+	for (i = 1; i <= 2; ++i)
+	{
+		fils = fork() ;
+		if (fils == -1)
+		{
+			perror("Erreur de fork\n") ;
+			exit(errno) ;
+		}
+		else if (fils == 0)
+		{
+			int temps = (rand() % 10) + 1 ;
+			printf("je suis le fils %d\n", i);
+
+			sleep(temps) ;
+			
+			printf("fils %d terminé après %d second\n", i, temps);
+			return (0) ;
+		}
+	}
+	for (i = 1; i <= 2; ++i)
+	{
+		wait(NULL) ;
+	}
+	fin = time(NULL) ;
+	printf("La durée totale d'execution est %ld\n", fin - debut);
+	return (0) ;
+}
+
+//3_1
+int main(int argc, char const *argv[])
+{
+	if (argc != 3)
+	{
+		printf("argument invalide\n") ;
+		return (0) ;
+	}
+	int a = atoi(argv[1]) , b = atoi(argv[2]) ;
+	printf("Leur somme: %d\n", a + b);
+	return 0;
+}
+
+//3_2
+int main(int argc, char const *argv[])
+{
+	if (argc != 2)
+	{
+		printf("argument invalide\n") ;
+		return (0) ;
+	}
+	char *pwd = getenv("PWD") ;
+	execlp("cp", "cp", "-r", pwd, argv[1], NULL) ;
+	return 0;
+}
+
+//3_3
+int main(int argc, char const *argv[])
+{
+	execlp("vim", "vim", argv[1], NULL) ;
+	return 0;
+}
+
+//3_4
+int main()
+{
+	char* repertoire = malloc(50) ;
+	char *pwd = getenv("PWD") ;
+	pid_t fils ;
+	while (1)
+	{
+		printf("Saisir un nom de repertoire:(taper quitter pour arrêter): ");
+		scanf("%s", repertoire) ;
+		if (strncmp(repertoire, "quitter", 7) == 0)
+		{
+			return (0) ;
+		}
+		fils = fork() ;
+		if (fils == 0)
+		{
+			execlp("cp", "cp", "-r", pwd, repertoire, NULL) ;
+		}
+		else if (fils > 0)
+		{
+			wait(NULL) ;
+		}
+	}
+	return 0;
+}
+
+//3_5
+int main()
+{
+	char* texte = malloc(50) ;
+	pid_t fils ;
+	while (1)
+	{
+		printf("Saisir un nom de fichier:(taper quitter pour arrêter): ");
+		scanf("%s", texte) ;
+		if (strncmp(texte, "quitter", 7) == 0)
+		{
+			return (0) ;
+		}
+		fils = fork() ;
+		if (fils == 0)
+		{
+			execlp("vim", "vim", texte, NULL) ;
+		}
+		else
+		{
+			wait(NULL) ;
+		}
+	}
+	return 0;
+}
+
+//4_1
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int main(int argc, char const *argv[])
+{
+	pid_t fils ;
+	char *nom_fich = "fichier", chaine[50], chaine_trouve[100], chaine_recu[50] ;
+	char *sous_chaine ;
+	int descripteur_1[2], descripteur_2[2] ;
+	pipe(descripteur_1) ;//pour la transmission de valeur retourner au fils
+	pipe(descripteur_2) ;//pour la chaine de fils à père
+
+	fils = fork() ;
+	
+	if (fils == 0)
+	{
+		printf("Saisir un mot: ");
+		scanf("%s", chaine) ;//le fils saisit un mot au clavier
+		close(descripteur_2[0]) ;
+		write(descripteur_2[1], chaine, 50) ;
+
+		int resultat ;
+		close(descripteur_1[1]) ;
+		read(descripteur_1[0], &resultat, sizeof(int)) ;
+		printf("resultat: %d\n", resultat);
+	}
+	else if (fils > 0)//dans le père
+	{
+		int valeur ;
+		close(descripteur_2[1]) ;
+		read(descripteur_2[0], chaine_recu, 50) ;
+		
+		FILE* f = fopen(nom_fich, "r") ;
+		fgets(chaine_trouve, 100, f  ) ;
+		fclose(f) ;
+		sous_chaine = strtok(chaine_trouve, " \n") ;
+		while (sous_chaine != NULL)
+		{
+			if (strncmp(chaine_recu, sous_chaine, strlen(chaine_recu)) == 0)
+			{
+				valeur = 1 ;
+				break ;
+			}
+			sous_chaine = strtok(NULL ," ") ;
+		}
+		close(descripteur_1[0]) ;
+		write(descripteur_1[1], &valeur, sizeof(int)) ;
+		wait(NULL) ;
+	}
+	return 0;
+}
+
+//4_2
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int main(int argc, char const *argv[])
+{
+	pid_t fils ;
+	char *nom_fich = "fichier", chaine[50], chaine_trouve[100], chaine_recu[50] ;
+	char *sous_chaine ;
+	int descripteur_1[2], descripteur_2[2] ;
+	int saved_in, saved_out ;
+
+	pipe(descripteur_1) ;//pour la transmission de valeur retourner au fils
+	pipe(descripteur_2) ;//pour la chaine de fils à père
+	fils = fork() ;
+	if (fils == 0)
+	{
+		saved_out = dup(1) ;
+		saved_in = dup(0) ;
+
+		scanf("%s", chaine) ;//le fils saisit un mot au clavier
+
+		close(descripteur_1[0]) ;
+		dup2(descripteur_1[1], 1) ;
+		close(descripteur_1[1]) ;
+		puts(chaine) ;//envoie le mot saisi vers le père
+		fflush(stdout) ;
+		close(1) ;//débloque le père
+
+		close(descripteur_2[1]) ;
+		dup2(descripteur_2[0], 0) ;
+		close(descripteur_2[0]) ;
+
+		int resultat ;
+		scanf("%d", &resultat) ;
+
+		dup2(saved_out, 1) ;
+		close(saved_out) ;
+		close(saved_in) ;
+		
+		printf("resultat: %d\n", resultat);
+	}
+	else if (fils > 0)//dans le père
+	{
+		int valeur = 0 ;
+
+		close(descripteur_1[1]) ;
+		dup2(descripteur_1[0], 0) ;
+		close(descripteur_1[0]) ;
+		scanf("%s", chaine_recu) ;
+
+		FILE* f = fopen(nom_fich, "r") ;
+		fgets(chaine_trouve, 100, f  ) ;
+		fclose(f) ;
+
+		sous_chaine = strtok(chaine_trouve, " \n") ;
+		while (sous_chaine != NULL)
+		{
+			if (strncmp(chaine_recu, sous_chaine, strlen(chaine_recu)) == 0)
+			{
+				valeur = 1 ;
+				break ;
+			}
+			sous_chaine = strtok(NULL ," ") ;
+		}
+
+		close(descripteur_2[0]) ;
+		dup2(descripteur_2[1], 1) ;
+		close(descripteur_2[1]) ;
+		
+		printf("%d", valeur) ;//envoie la valeur retourner vers le fils
+		fflush(stdout) ;
+		close(1) ;//débloque le fils
+
+		wait(NULL) ;
+	}
+	return 0;
+}
+
+//4_31
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+
+int main(int argc, char const *argv[])
+{
+	int fd ;
+	pid_t fils ;
+	int tube[2] ;
+
+	pipe(tube) ;
+	fils = fork() ;
+
+	if (fils == 0)
+	{
+		char nomfich[50] ;
+		close(tube[1]) ;
+		read(tube[0], nomfich, sizeof(nomfich)) ;
+		close(tube[0]) ;
+
+		char *arg[] = {"./exercice4_32", nomfich, NULL} ;
+		execvp("./exercice4_32", arg) ;
+	}
+	else if (fils > 0)
+	{
+		char *nomfich = "/tmp/test.txt" ;
+		close(tube[0]) ;
+		write(tube[1], nomfich, sizeof(nomfich)) ;
+		close(tube[1]) ;
+		
+
+		FILE *fp ;
+		
+		if (mkfifo(nomfich, 0644) != 0)
+		{
+			perror("Problème de création du noeud de tube") ;
+			exit (1) ;
+		}
+
+		fd = open(nomfich, O_WRONLY) ;
+		fp = fdopen(fd, "w") ;
+		fprintf(fp, "coucou\n") ;
+		close(fd) ;
+
+		wait(NULL) ;
+
+		unlink(nomfich) ;
+
+	}
+	
+	return 0;
+}
+
+//4_32
+int main(int argc, char const *argv[])
+{
+	int fd ;
+	FILE *fp ;
+	char chaine[50] ;
+	fd = open(argv[1], O_RDONLY) ;
+	fp = fdopen(fd, "r") ;
+	fscanf(fp, "%s\n", chaine) ;
+	puts(chaine) ;
+	unlink(argv[1]) ;
+	return 0;
+}
+
+//5_1
+#include <stdio.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
+
+void *ma_fonction_thread(void *arg)
+{
+	int *tableau = (int *)arg;
+	int n = tableau[0] ;
+	printf("affichage des contenus de tableau passé en paramètre\n");
+	for (int i = 1; i <=n; ++i)
+	{
+		printf("%d ", tableau[i]);
+	}
+	printf("\n");
+	pthread_exit(NULL); 
+}
+
+int main(int argc, char const *argv[])
+{
+	int ret ;
+	int tableau[] = {5, 2, 4, 6, 8, 10} ;
+	pthread_t my_thread ;
+	ret = pthread_create(&my_thread, NULL, ma_fonction_thread, (void*)tableau) ;
+	if (ret != 0)
+	{
+		fprintf(stderr, "erreur de création du thread\n");
+		exit(1) ;
+	}
+	pthread_join(my_thread, NULL) ;
+	return 0;
+}
+
+//5_2
+#include <stdio.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
+
+void *ma_fonction_thread(void *arg)
+{
+	srand(time(NULL)) ;
+	int n = 5 ;
+	int *tableau = malloc((n+1)*sizeof(int)) ;
+	tableau[0] = n ;
+	for (int i = 1; i <=n; i++)
+	{
+		tableau[i] = rand() % 100 ;
+	}
+	printf("j'arrive a remplir le tableau\n");
+	pthread_exit((void*)tableau) ; 
+}
+
+int main(int argc, char const *argv[])
+{
+	int ret ;
+	pthread_t my_thread ;
+	ret = pthread_create(&my_thread, NULL, ma_fonction_thread, NULL) ;
+	if (ret != 0)
+	{
+		fprintf(stderr, "erreur de création du thread\n");
+		exit(1) ;
+	}
+	int *tableau ;
+	pthread_join(my_thread, (void**)&tableau) ;
+	for (int i = 1; i <= tableau[0]; ++i)
+	{
+		printf("%d ", tableau[i]);
+	}
+	printf("\n");
+	return 0;
+}
+
+//5_3
+#include <stdio.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
+
+pthread_mutex_t my_mutex = PTHREAD_MUTEX_INITIALIZER ;
+
+typedef struct
+{
+	int *tableau ;
+	int n ;
+	int x ;
+} TypeTableau ;
+
+TypeTableau tab ;
+
+void *thread_initialise(void *arg)
+{
+	srand(time(NULL)) ;
+
+	pthread_mutex_lock(&my_mutex) ;
+
+	tab.n = (int)arg ;
+	tab.tableau = malloc(tab.n * sizeof(int)) ;
+	for (int i = 0; i < tab.n; i++)
+	{
+		tab.tableau[i] = rand() % 100 ;
+	}
+
+	for (int i = 0; i < tab.n; i++)
+	{
+		printf("%d ", tab.tableau[i]);
+	}
+	printf("\n");
+
+	pthread_mutex_unlock(&my_mutex) ;
+
+	pthread_exit(NULL) ; 
+}
+
+void *thread_verification(void *arg)
+{
+	int ret = 0 ;
+
+	pthread_mutex_lock(&my_mutex) ;
+
+	for (int i = 0; i < tab.n; ++i)
+	{
+		if (tab.tableau[i] == tab.x)
+		{
+			ret = 1 ;
+			pthread_exit((void*)ret) ;
+			pthread_mutex_unlock(&my_mutex) ;
+
+		}
+	}
+
+	pthread_mutex_unlock(&my_mutex) ;
+
+	pthread_exit((void*)ret) ;
+}
+
+int main(int argc, char const *argv[])
+{
+	int ret ;
+	pthread_t my_thread ;
+	int n = 5 ;
+
+	ret = pthread_create(&my_thread, NULL, thread_initialise, (void*)n) ;
+	if (ret != 0)
+	{
+		fprintf(stderr, "erreur de création du thread\n");
+		exit(1) ;
+	}
+
+	pthread_mutex_lock(&my_mutex) ;
+
+	printf("entrez un entier x: ");
+	scanf("%d", &tab.x) ;
+
+	pthread_mutex_unlock(&my_mutex) ;
+
+	pthread_join(my_thread, NULL) ;
+
+	ret = pthread_create(&my_thread, NULL, thread_verification, NULL) ;
+	if (ret != 0)
+	{
+		fprintf(stderr, "erreur de création du thread\n");
+		exit(1) ;
+	}
+	pthread_join(my_thread, (void*)&ret) ;
+
+	printf("resultat: %d\n", ret);
+	return 0;
+}
+
+//6_2
+#include <stdio.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <time.h>
+
+int main(int argc, char**argv)
+{
+	DIR* dir ;
+	struct stat st; /* pour récupérer les informations sur un fichier */
+	struct dirent *ent;
+	char chemin[1024] ;
+
+	if (argc == 1)
+	{
+		fprintf(stderr, "Usage : %s nom_de_repertoire\n", argv[0]);
+		exit(1);
+	}
+
+	for (int i = 1; i < argc; ++i)
+	{
+		dir = opendir(argv[i]) ;
+		if (dir == NULL)
+		{
+			fprintf(stderr, "Erreur d'ouverture du réperoire %s\n",argv[i]);
+			fprintf(stderr, "Droits inssufisant ou répertoire incorrect\n");
+			continue ;
+		}
+		printf("Répertoire %s:\n", argv[i]);
+		while ((ent = readdir(dir)) != NULL)
+		{
+			snprintf(chemin, sizeof(chemin), "%s/%s", argv[i], ent->d_name) ;
+			if (stat(chemin, &st)!= 0)
+			{
+				perror("Erreur d'accès au fichier\n");
+				continue ;
+			}
+			if (st.st_size >= (1024*1024))
+			{
+				printf("%s : UID du propriétaire du fichier %d, taille: %.2f Mo\n", ent->d_name, st.st_uid, (float)st.st_size/(1024*1024));
+			}
+		}
+	}
+	
+	return 0;
+}
+
+//8_1
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <signal.h>
+#include <time.h>
+
+#define PORT 33000
+#define MAX_PRODUITS 100
+#define MAX_NOM 256
+
+ // a)
+typedef struct
+{
+    char nom[MAX_NOM];
+    float prix;
+} Produit;
+
+// b)
+int charger_base_donnees(char *fichier, Produit *produits, int max_produits)
+{
+    FILE *fp;
+    char ligne[200];
+    int count = 0;
+    
+    fp = fopen(fichier, "r") ;
+
+    if (fp == NULL)
+    {
+        perror("Erreur ouverture fichier");
+        return (-1);
+    }
+    
+    while (fgets(ligne, sizeof(ligne), fp) != NULL && count < max_produits)
+    {
+        if (sscanf(ligne, "%s %f", produits[count].nom, &produits[count].prix) == 2) {
+            count++;
+        }
+    }
+    
+    fclose(fp);
+    return count;
+}
+
+// c)
+Produit* chercher_produit(Produit *produits, int nb_produits, char *nom)
+{
+    for (int i = 0; i < nb_produits; i++)
+    {
+        if (strcasecmp(produits[i].nom, nom) == 0)
+        {
+            return &produits[i];
+        }
+    }
+    return NULL;
+}
+
+// d)
+Produit produits[MAX_PRODUITS] ;
+int nb_produits = 0 ;
+
+void traite_client(int sock)
+{
+    char bufferR[MAX_NOM] ;
+    char bufferW[MAX_NOM] ;
+    char nom_produit[MAX_NOM] ;
+    int quantite;
+    Produit *p;
+    float total;
+    
+    sprintf(bufferW, "Bienvenue! Entrez nom produit et quantite (ex: pomme 5): ") ;
+    write(sock, bufferW, strlen(bufferW));
+    
+    while (1)
+    {
+        memset(bufferR, 0, MAX_NOM) ;
+        int nb = read(sock, bufferR, MAX_NOM) ;
+        if (nb <= 0)
+        {
+            break;
+        }
+        
+        bufferR[nb-1] = '\0';
+        
+        if (sscanf(bufferR, "%s %d", nom_produit, &quantite) == 2)
+        {
+            p = chercher_produit(produits, nb_produits, nom_produit);
+            if (p != NULL)
+            {
+                total = p->prix * quantite;
+                sprintf(bufferW, "Produit: %s, Quantite: %d, Total: %.2f Ar\n", nom_produit, quantite, total);
+            }
+            else
+            {
+                sprintf(bufferW, "Produit '%s' non trouve\n", nom_produit);
+            }
+        }
+        else
+        {
+            sprintf(bufferW, "Format incorrect. Utilisez: nom_produit quantite\n");
+        }
+        write(sock, bufferW, strlen(bufferW));
+    }
+    
+    close(sock);
+    exit(0);
+}
+
+int main() {
+    int sock_contact, sock_connectee;
+    struct sockaddr_in adresse;
+    socklen_t longueur;
+    pid_t pid_fils;
+    
+    nb_produits = charger_base_donnees("produits.txt", produits, MAX_PRODUITS);
+    printf("%d produits charges\n", nb_produits);
+    
+    sock_contact = socket(AF_INET, SOCK_STREAM, 0) ;
+    if (sock_contact < 0)
+    {
+        perror("Erreur socket");
+        return -1;
+    }
+    
+    memset(&adresse, 0, sizeof(adresse));
+    adresse.sin_family = AF_INET;
+    adresse.sin_port = htons(PORT);
+    adresse.sin_addr.s_addr = INADDR_ANY;
+    
+    if (bind(sock_contact, (struct sockaddr*)&adresse, sizeof(adresse)) < 0)
+    {
+        perror("Erreur bind");
+        return -1;
+    }
+    
+    listen(sock_contact, 5);
+    printf("Serveur en ecoute sur le port %d\n", PORT);
+    
+    while (1)
+    {
+        longueur = sizeof(adresse);
+        sock_connectee = accept(sock_contact, (struct sockaddr*)&adresse, &longueur) ;
+        if (sock_connectee < 0)
+        {
+            perror("Erreur accept");
+            continue;
+        }
+        
+        pid_fils = fork() ;
+
+        if (pid_fils == 0)
+        {
+            close(sock_contact);
+            traite_client(sock_connectee);
+        }
+        else
+        {
+            close(sock_connectee);
+        }
+    }
+    
+    close(sock_contact);
+    return (0) ;
+}
+
+// e)
+void traite_client_multiproduits(int sock)
+{
+    char bufferR[MAX_NOM] ;
+    char bufferW[MAX_NOM] ;
+    char ligne[MAX_NOM] ;
+    char nom_produit[MAX_NOM] ;
+    int quantite ;
+    Produit *p ;
+    float total_general = 0;
+    
+    sprintf(bufferW, "Entrez vos commandes (une par ligne, 'fin' pour terminer):\n");
+    write(sock, bufferW, strlen(bufferW)) ;
+    
+    while (1)
+    {
+        memset(bufferR, 0, MAX_NOM) ;
+        int nb = read(sock, bufferR, MAX_NOM) ;
+
+        if (nb <= 0)
+        {
+            break;
+        }
+
+        bufferR[nb-1] = '\0';
+        
+        if (strcasecmp(bufferR, "fin") == 0)
+        {
+            sprintf(bufferW, "Total general: %.2f Ar\n", total_general) ;
+            write(sock, bufferW, strlen(bufferW));
+            break ;
+        }
+        
+        if (sscanf(bufferR, "%s %d", nom_produit, &quantite) == 2)
+        {
+            p = chercher_produit(produits, nb_produits, nom_produit) ;
+            if (p != NULL)
+            {
+                float total = p->prix * quantite ;
+                total_general += total ;
+                continue ;
+            }
+            else 
+            {
+                sprintf(bufferW, "Produit '%s' non trouve\n", nom_produit);
+            }
+        }
+        else
+        {
+            sprintf(bufferW, "Format: nom_produit quantite\n");
+        }
+        write(sock, bufferW, strlen(bufferW));
+    }
+}
+
+// f)
+//on implemente cette fonction dans traite_client
+void sauvegarder_commande(int sock, char *client_ip, char *commande, float total)
+{
+    char nom_fichier[100] ;
+    FILE *fp ;
+    time_t t ;
+    struct tm *tm_info ;
+    
+    time(&t) ;
+    tm_info = localtime(&t) ;
+    
+    sprintf(nom_fichier, "./commande_%04d%02d%02d_%02d%02d%02d.txt",
+            tm_info->tm_year + 1900, tm_info->tm_mon + 1, tm_info->tm_mday,
+            tm_info->tm_hour, tm_info->tm_min, tm_info->tm_sec);
+    
+    
+    fp = fopen(nom_fichier, "w") ;
+
+    if (fp != NULL)
+    {
+        fprintf(fp, "Client IP: %s\n", client_ip) ;
+        fprintf(fp, "Date: %s", ctime(&t)) ;
+        fprintf(fp, "Commande: %s\n", commande) ;
+        fprintf(fp, "Total: %.2f Ar\n", total) ;
+        fclose(fp);
+    }
+}
+
+//8_2
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
+#define MAX 256
+#define PORT 33000
+#define FICHIER_AUTH "add_autoris.txt"
+
+// a)
+//retourne 1 si trouver, 0 sinon
+int est_ip_autorisee(char *ip)
+{
+    FILE *fp ;
+    char ligne[MAX];
+    
+    fp = fopen(FICHIER_AUTH, "r") ;
+
+    if (fp == NULL)
+    {
+        printf("Fichier %s non trouve, acces refuse\n", FICHIER_AUTH);
+        return 0;
+    }
+    
+    while (fgets(ligne, sizeof(ligne), fp) != NULL)
+    {
+        ligne[strcspn(ligne, "\n")] = '\0';  //remplaçant \n par \0
+        if (strcmp(ligne, ip) == 0)
+        {
+            fclose(fp);
+            return 1;
+        }
+    }
+    
+    fclose(fp);
+    return 0;
+}
+
+void traite_connection(int sock, struct sockaddr_in *client)
+{
+    char bufferW[MAX];
+    char *client_ip = inet_ntoa(client->sin_addr) ;
+    
+    if (est_ip_autorisee(client_ip) == 0)
+    {
+        sprintf(bufferW, "Acces refuse: IP %s non autorisee\n", client_ip) ;
+        write(sock, bufferW, strlen(bufferW)) ;
+        close(sock) ;
+        return ;
+    }
+    
+    sprintf(bufferW, "Bienvenue! Votre IP %s est autorisee\n", client_ip);
+    write(sock, bufferW, strlen(bufferW));
+
+    close(sock);
+}
+
+int main()
+{
+    int sock_contact, sock_connectee ;
+    struct sockaddr_in adresse, client_addr;
+    socklen_t longueur;
+    pid_t pid_fils;
+    
+    sock_contact = socket(AF_INET, SOCK_STREAM, 0) ;
+    if (sock_contact < 0)
+    {
+        perror("Erreur socket");
+        return -1;
+    }
+    
+    memset(&adresse, 0, sizeof(adresse));
+    adresse.sin_family = AF_INET;
+    adresse.sin_port = htons(PORT);
+    adresse.sin_addr.s_addr = INADDR_ANY;
+    
+    if (bind(sock_contact, (struct sockaddr*)&adresse, sizeof(adresse)) < 0)
+    {
+        perror("Erreur bind");
+        return -1;
+    }
+    
+    listen(sock_contact, 5);
+    printf("Serveur en ecoute sur le port %d\n", PORT);
+    
+    while (1)
+    {
+        longueur = sizeof(client_addr);
+        sock_connectee = accept(sock_contact, (struct sockaddr*)&client_addr, &longueur) ;
+
+        if (sock_connectee < 0)
+        {
+            perror("Erreur accept");
+            continue;
+        }
+        
+        pid_fils = fork() ;
+
+        if (pid_fils == 0)
+        {
+            close(sock_contact);
+            traite_connection(sock_connectee, &client_addr);
+            exit(0);
+        }
+        else
+        {
+            close(sock_connectee);
+        }
+    }
+    
+    return 0;
+}
+
+// b)
+//retourne 1 si trouver, 0 sinon
+char* est_ip_autorisee(char *ip)
+{
+    FILE *fp ;
+    char ligne[MAX] ;
+    char ip_tmp[MAX] ;
+    char nom[MAX] ;
+    
+    fp = fopen(FICHIER_AUTH, "r") ;
+
+    if (fp == NULL)
+    {
+        printf("Fichier %s non trouve, acces refuse\n", FICHIER_AUTH);
+        return NULL;
+    }
+    
+    while (fgets(ligne, sizeof(ligne), fp) != NULL)
+    {
+        sscanf(ligne, "%s %s", ip_tmp, nom) ;
+        if (strncmp(ip_tmp, ip, strlen(ip)) == 0)
+        {
+            fclose(fp) ;
+            return (nom) ;
+        }
+    }
+    
+    fclose(fp);
+    return NULL;
+}
+
+void traite_connection(int sock, struct sockaddr_in *client)
+{
+    char bufferW[MAX];
+    char *nom ;
+    char *client_ip = inet_ntoa(client->sin_addr) ;
+    
+    nom = est_ip_autorisee(client_ip) ;
+
+    if ( nom == NULL)
+    {
+        sprintf(bufferW, "Acces refuse: IP %s non autorisee\n", client_ip) ;
+        write(sock, bufferW, strlen(bufferW)) ;
+        close(sock) ;
+        return ;
+    }
+    
+    sprintf(bufferW, "Bienvenue %s! Votre IP %s est autorisee\n", nom, client_ip);
+    write(sock, bufferW, strlen(bufferW));
+
+    close(sock);
+}
+
+//8_3_serveur
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
+#define MAX 256
+#define PORT 33000
+#define FICHIER_AUTH "add_autoris.txt"
+
+// a)
+//retourne 1 si trouver, 0 sinon
+int est_ip_autorisee(char *ip)
+{
+    FILE *fp ;
+    char ligne[MAX];
+    
+    fp = fopen(FICHIER_AUTH, "r") ;
+
+    if (fp == NULL)
+    {
+        printf("Fichier %s non trouve, acces refuse\n", FICHIER_AUTH);
+        return 0;
+    }
+    
+    while (fgets(ligne, sizeof(ligne), fp) != NULL)
+    {
+        ligne[strcspn(ligne, "\n")] = '\0';  //remplaçant \n par \0
+        if (strcmp(ligne, ip) == 0)
+        {
+            fclose(fp);
+            return 1;
+        }
+    }
+    
+    fclose(fp);
+    return 0;
+}
+
+void traite_connection(int sock, struct sockaddr_in *client)
+{
+    char bufferW[MAX];
+    char *client_ip = inet_ntoa(client->sin_addr) ;
+    
+    if (est_ip_autorisee(client_ip) == 0)
+    {
+        sprintf(bufferW, "Acces refuse: IP %s non autorisee\n", client_ip) ;
+        write(sock, bufferW, strlen(bufferW)) ;
+        close(sock) ;
+        return ;
+    }
+    
+    sprintf(bufferW, "Bienvenue! Votre IP %s est autorisee\n", client_ip);
+    write(sock, bufferW, strlen(bufferW));
+
+    close(sock);
+}
+
+int main()
+{
+    int sock_contact, sock_connectee ;
+    struct sockaddr_in adresse, client_addr;
+    socklen_t longueur;
+    pid_t pid_fils;
+    
+    sock_contact = socket(AF_INET, SOCK_STREAM, 0) ;
+    if (sock_contact < 0)
+    {
+        perror("Erreur socket");
+        return -1;
+    }
+    
+    memset(&adresse, 0, sizeof(adresse));
+    adresse.sin_family = AF_INET;
+    adresse.sin_port = htons(PORT);
+    adresse.sin_addr.s_addr = INADDR_ANY;
+    
+    if (bind(sock_contact, (struct sockaddr*)&adresse, sizeof(adresse)) < 0)
+    {
+        perror("Erreur bind");
+        return -1;
+    }
+    
+    listen(sock_contact, 5);
+    printf("Serveur en ecoute sur le port %d\n", PORT);
+    
+    while (1)
+    {
+        longueur = sizeof(client_addr);
+        sock_connectee = accept(sock_contact, (struct sockaddr*)&client_addr, &longueur) ;
+
+        if (sock_connectee < 0)
+        {
+            perror("Erreur accept");
+            continue;
+        }
+        
+        pid_fils = fork() ;
+
+        if (pid_fils == 0)
+        {
+            close(sock_contact);
+            traite_connection(sock_connectee, &client_addr);
+            exit(0);
+        }
+        else
+        {
+            close(sock_connectee);
+        }
+    }
+    
+    return 0;
+}
+
+// b)
+//retourne 1 si trouver, 0 sinon
+char* est_ip_autorisee(char *ip)
+{
+    FILE *fp ;
+    char ligne[MAX] ;
+    char ip_tmp[MAX] ;
+    char nom[MAX] ;
+    
+    fp = fopen(FICHIER_AUTH, "r") ;
+
+    if (fp == NULL)
+    {
+        printf("Fichier %s non trouve, acces refuse\n", FICHIER_AUTH);
+        return NULL;
+    }
+    
+    while (fgets(ligne, sizeof(ligne), fp) != NULL)
+    {
+        sscanf(ligne, "%s %s", ip_tmp, nom) ;
+        if (strncmp(ip_tmp, ip, strlen(ip)) == 0)
+        {
+            fclose(fp) ;
+            return (nom) ;
+        }
+    }
+    
+    fclose(fp);
+    return NULL;
+}
+
+void traite_connection(int sock, struct sockaddr_in *client)
+{
+    char bufferW[MAX];
+    char *nom ;
+    char *client_ip = inet_ntoa(client->sin_addr) ;
+    
+    nom = est_ip_autorisee(client_ip) ;
+
+    if ( nom == NULL)
+    {
+        sprintf(bufferW, "Acces refuse: IP %s non autorisee\n", client_ip) ;
+        write(sock, bufferW, strlen(bufferW)) ;
+        close(sock) ;
+        return ;
+    }
+    
+    sprintf(bufferW, "Bienvenue %s! Votre IP %s est autorisee\n", nom, client_ip);
+    write(sock, bufferW, strlen(bufferW));
+
+    close(sock);
+}
+
+//8_3_client
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
+#define PORT        9999
+#define BUFFER_SIZE 256
+
+int main(int argc, char **argv)
+{
+    if (argc != 2) {
+        fprintf(stderr, "Usage : %s chemin_fichier\n", argv[0]);
+        exit(1);
+    }
+
+    FILE *fp = fopen(argv[1], "r");
+    if (fp == NULL) {
+        perror("Erreur ouverture fichier");
+        exit(1);
+    }
+
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0)
+    {
+        perror("Erreur socket");
+        exit(1);
+    }
+
+    struct sockaddr_in adresse ;
+    memset(&adresse, 0, sizeof(adresse));
+    adresse.sin_family = AF_INET;
+    adresse.sin_port   = htons(PORT);
+    inet_aton("127.0.0.1", &adresse.sin_addr) ;
+
+    if (connect(sock, (struct sockaddr*)&adresse, sizeof(adresse)) < 0)
+    {
+        perror("Erreur connect");
+        exit(1);
+    }
+    printf("Connecté au serveur. Envoi de : %s\n", argv[1]);
+
+    char buffer[BUFFER_SIZE];
+    int  n;
+
+    while ((n = fread(buffer, 1, BUFFER_SIZE, fp)) > 0)
+    {
+        write(sock, buffer, n);
+    }
+
+    printf("Fichier envoyé.\n");
+
+    fclose(fp);
+    close(sock);
+    return 0;
+}
